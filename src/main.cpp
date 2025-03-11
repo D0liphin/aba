@@ -153,20 +153,21 @@ template <class Lock> void bm_lock(int iters, int hold_iters)
     assert(count == expected_count);
     auto const duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << typeid(Lock).name() << "\n\titers      : " << iters
-              << "\n\thold_iters : " << hold_iters << "\n\ttime       : " << duration.count() << "us"
-              << "\n\tclusters   : ";
+              << "\n\thold_iters : " << hold_iters << "\n\ttime       : " << duration.count()
+              << "us" << "\n\tclusters   : ";
     // Compute clusters
     auto const clusters = find_clusters(log);
     double total_count = expected_count - 1;
-    int col = 0; 
+    int col = 0;
     for (auto const &[ab, count] : clusters) {
-    	int percentage = (10000.0 * (double)count / total_count) + 0.5;
-    	if (col == 0) std::cout << "\n\t\t";
-    	std::stringstream ss;
-        ss << "(" << ab.first << "," << ab.second << "): " << ((double)percentage / 100.0) << ", " << count;
+        int percentage = (10000.0 * (double)count / total_count) + 0.5;
+        if (col == 0) std::cout << "\n\t\t";
+        std::stringstream ss;
+        ss << "(" << ab.first << "," << ab.second << "): " << ((double)percentage / 100.0) << ", "
+           << count;
         size_t rem = 40 - ss.str().size();
         for (int i = 0; i < rem; ++i) {
-        	ss << " ";
+            ss << " ";
         }
         std::cout << ss.str();
         col = (col + 1) % 4;
@@ -180,7 +181,7 @@ int main()
     set_high_priority();
 
     bm_lock<mylock1>(50e3, 0); // should be faster
-    bm_lock<mylock2>(50e3, 0); // should 
+    bm_lock<mylock2>(50e3, 0); // should
     bm_lock<mylock1>(50e3, 1e2);
     bm_lock<mylock2>(50e3, 1e2);
     bm_lock<mylock1>(50e3, 1e4);
