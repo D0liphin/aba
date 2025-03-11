@@ -165,8 +165,8 @@ int main()
 {
     set_high_priority();
 
-    bm_lock<mylock1>(50e3, 0);
-    bm_lock<mylock2>(50e3, 0);
+    bm_lock<mylock1>(50e3, 0); // should be faster
+    bm_lock<mylock2>(50e3, 0); // should 
     bm_lock<mylock1>(50e3, 1e2);
     bm_lock<mylock2>(50e3, 1e2);
     bm_lock<mylock1>(50e3, 1e4);
