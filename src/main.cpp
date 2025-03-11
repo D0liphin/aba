@@ -13,6 +13,7 @@
 #include <map>
 #include <array>
 #include <math.h>
+#include <sstream>
 
 // Set this to the number of CPUs that you have available
 constexpr std::array<int, 8> CPU_IDS = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -77,8 +78,7 @@ void write_log(std::string name, std::vector<int> const &log)
 void set_high_priority()
 {
     if (nice(-19) == -1) {
-        std::cout << std::strerror(*__errno_location()) << std::endl;
-        exit(0);
+        std::cout << "WARNING: unable to set priority, you might need to use sudo" << std::endl;
     }
 }
 
@@ -112,6 +112,7 @@ void spin(long n)
     for (long i = 0; i < n; ++i) {
         x = i;
     }
+    (void)x;
 }
 
 /// @brief Benchmark a lock (`Lock` should have a default constructor, a
@@ -143,6 +144,7 @@ template <class Lock> void bm_lock(int iters, int hold_iters)
             }
         }));
     }
+    // Time it
     auto start = std::chrono::system_clock::now();
     for (auto &th : ths) {
         th.join();
@@ -151,11 +153,23 @@ template <class Lock> void bm_lock(int iters, int hold_iters)
     assert(count == expected_count);
     auto const duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << typeid(Lock).name() << "\n\titers      : " << iters
-              << "\n\thold_iters : " << hold_iters << "\n\ttime       : " << duration
+              << "\n\thold_iters : " << hold_iters << "\n\ttime       : " << duration.count() << "us"
               << "\n\tclusters   : ";
+    // Compute clusters
     auto const clusters = find_clusters(log);
+    double total_count = expected_count - 1;
+    int col = 0; 
     for (auto const &[ab, count] : clusters) {
-        std::cout << "\n\t\t(" << ab.first << "," << ab.second << "): " << count;
+    	int percentage = (10000.0 * (double)count / total_count) + 0.5;
+    	if (col == 0) std::cout << "\n\t\t";
+    	std::stringstream ss;
+        ss << "(" << ab.first << "," << ab.second << "): " << ((double)percentage / 100.0) << ", " << count;
+        size_t rem = 40 - ss.str().size();
+        for (int i = 0; i < rem; ++i) {
+        	ss << " ";
+        }
+        std::cout << ss.str();
+        col = (col + 1) % 4;
     }
     std::cout << std::endl;
     write_log(typeid(Lock).name(), log);
